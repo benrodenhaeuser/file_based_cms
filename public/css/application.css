@@ -1,0 +1,24 @@
+body {
+  font: normal 20px "PT Sans", Helvetica, Arial, sans-serif;
+  color: #3f3f3f;
+  background: #ffffff;
+  padding: 50px;
+}
+
+header {
+  padding-bottom: 50px;
+}
+
+header > h1 > a {
+  font-size: 1.5rem;
+  text-decoration: none;
+}
+
+main > h1 {
+  font-size: 1.2rem;
+}
+
+.message {
+  background-color: yellow;
+  margin-bottom: 10px;
+}

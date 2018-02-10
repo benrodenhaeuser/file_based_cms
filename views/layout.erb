@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <title>File-based CMS</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato">
+    <!-- <link rel="stylesheet" href="/stylesheets/whitespace-reset.css"> -->
+    <link rel="stylesheet" href="/css/application.css">
+  </head>
+  <body>
+    <header>
+      <h1>
+        <a href="/">
+          YourCMS
+        </a>
+      </h1>
+    </header>
+
+    <% if session[:message] %>
+      <div class="message">
+        <p><%= session.delete(:message) %></p>
+      </div>
+    <% end %>
+
+    <main>
+      <%== yield %>
+    </main>
+  </body>
+</html>
