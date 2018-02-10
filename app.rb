@@ -68,13 +68,21 @@ get '/:filename/edit' do
   end
 end
 
+post '/:filename/delete' do
+  @filename = params[:filename]
+  file_path = File.join(data_path, params[:filename])
+  File.delete(file_path)
+  session[:message] = "The file '#{@filename}' has been deleted."
+  redirect '/'
+end
+
 post '/:filename' do
   filename = params[:filename]
   file_path = File.join(data_path, filename)
 
   content = params[:content]
   File.write(file_path, content)
-  session[:message] = 'The file has been modified.'
+  session[:message] = "The file '#{filename}' has been modified."
   redirect "/"
 end
 
