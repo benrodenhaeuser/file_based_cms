@@ -40,7 +40,7 @@ class AppTest < Minitest::Test
     create_document('changes.txt', 'Changes')
     get "/changes.txt"
     assert_equal 200, last_response.status
-    assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
+    assert_equal "text/plain", last_response["Content-Type"]
     assert_includes last_response.body, "Changes"
   end
 
@@ -56,7 +56,7 @@ class AppTest < Minitest::Test
     create_document('history.md', '# History')
 
     get '/history.md'
-    assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
+    assert_equal "text/html", last_response["Content-Type"]
     assert_includes last_response.body, '<h1>'
     refute_includes last_response.body, '#'
   end
@@ -78,5 +78,25 @@ class AppTest < Minitest::Test
     assert_equal 302, last_response.status
     get last_response.headers['Location']
     assert_includes last_response.body, 'modified'
+  end
+
+  def test_new_document_view
+    get "/document/new"
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, '<form'
+  end
+
+  def test_submit_new_document
+    post "/document/new", :filename => 'filename'
+    assert_equal 302, last_response.status
+    get last_response.headers['Location']
+    assert_includes last_response.body, 'filename'
+    assert_includes last_response.body, 'has been created'
+  end
+
+  def test_with_empty_filename
+    post "/document/new", :filename => ''
+    assert_equal 422, last_response.status
+    # get last_response.headers['Location']
   end
 end

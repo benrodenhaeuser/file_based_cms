@@ -28,7 +28,7 @@ def load_file_content(file_path)
   if File.extname(file_path) == '.md'
     headers["Content-Type"] = "text/html"
     erb render_markdown(content)
-  else
+  else # TODO: this allows to create files with any (or no) extension
     headers["Content-Type"] = "text/plain"
     content
   end
@@ -84,8 +84,15 @@ end
 
 post '/document/new' do
   filename = params[:filename]
-  file_path = File.join(data_path, filename)
-  File.new(file_path, 'w')
-  session[:message] = "The file '#{filename}' has been created."
-  redirect '/'
+
+  if filename != ''
+    file_path = File.join(data_path, filename)
+    File.new(file_path, 'w')
+    session[:message] = "The file '#{filename}' has been created."
+    redirect '/'
+  else
+    session[:message] = "Enter at least one non-whitespace character."
+    status 422
+    erb(:new_document)
+  end
 end
