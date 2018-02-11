@@ -31,8 +31,16 @@ class AppTest < Minitest::Test
     last_request.env["rack.session"]
   end
 
+  def admin_session
+    { "rack.session" => { user: 'admin' } }
+  end
+
   def test_accessing_session_hash
-    post "/document/new", :filename => 'filename'
+    post(
+      "/document/new",
+      { :filename => 'filename' },
+      admin_session
+    )
     assert_equal 302, last_response.status
     assert_includes session[:message], 'has been created'
   end
@@ -72,7 +80,11 @@ class AppTest < Minitest::Test
   def test_show_edit_template
     create_document('history.md', 'History')
 
-    get '/history.md/edit'
+    get(
+      '/history.md/edit',
+      {},
+      admin_session
+    )
     assert_equal 200, last_response.status
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
     assert_includes last_response.body, '<form'
@@ -82,32 +94,44 @@ class AppTest < Minitest::Test
   def test_submit_changed_document
     create_document('about.txt')
 
-    post "/about.txt", :content => 'modified'
+    post(
+      "/about.txt",
+      { :content => 'modified'},
+      admin_session
+    )
     assert_equal 302, last_response.status
     assert_includes session[:message], 'modified'
   end
 
   def test_new_document_view
-    get "/document/new"
+    get "/document/new", {}, admin_session
     assert_equal 200, last_response.status
     assert_includes last_response.body, '<form'
   end
 
   def test_submit_new_document
-    post "/document/new", :filename => 'filename'
+    post(
+      "/document/new",
+      { :filename => 'filename' },
+      admin_session
+    )
     assert_equal 302, last_response.status
     assert_includes session[:message], 'has been created'
   end
 
   def test_with_empty_filename
-    post "/document/new", :filename => ''
+    post(
+      "/document/new",
+      { :filename => '' },
+      admin_session
+    )
     assert_equal 422, last_response.status
   end
 
   def test_delete_document
     create_document('about.txt')
 
-    post '/about.txt/delete', :filename => 'about.txt'
+    post('/about.txt/delete', { :filename => 'about.txt' }, admin_session)
     assert_equal 302, last_response.status
 
     get last_response.headers['Location']
@@ -119,12 +143,12 @@ class AppTest < Minitest::Test
   end
 
   def test_signin
-    post "/users/sign_in", :user => "admin", :password => "secret"
+    post "/users/sign_in", :user => "ben", :password => "password"
     assert_equal 302, last_response.status
 
     get last_response["Location"]
     assert_includes last_response.body, "Welcome"
-    assert_includes last_response.body, "Logged in as admin"
+    assert_includes last_response.body, "Logged in as ben"
   end
 
   def test_signin_with_bad_credentials

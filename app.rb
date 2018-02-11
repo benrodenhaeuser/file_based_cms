@@ -4,11 +4,35 @@ require "sinatra/content_for"
 require "tilt/erubis"
 require "redcarpet"
 require 'yaml'
+require 'bcrypt'
 
 configure do
   enable :sessions
   set :session_secret, 'secret'
   set :erb, :escape_html => true
+end
+
+class PasswordDigester
+  def self.encrypt(password)
+    BCrypt::Password.create(password)
+  end
+
+  def self.check?(password, encrypted_password)
+    BCrypt::Password.new(encrypted_password) == password
+  end
+end
+
+def valid_credentials?(user, password)
+  return false unless credentials.key?(user)
+  PasswordDigester.check?(password, stored_credentials[user])
+end
+
+def stored_credentials
+  if ENV["RACK_ENV"] == "test"
+    YAML.load(File.read("test/users.yaml"))
+  else
+    YAML.load(File.read("users/users.yaml"))
+  end
 end
 
 def data_path
@@ -24,7 +48,6 @@ def render_markdown(content)
   markdown.render(content)
 end
 
-# TODO: would like to use something like "in_paragraphs(text)" for textfiles
 def load_file_content(file_path)
   content = File.read(file_path)
 
@@ -36,10 +59,6 @@ def load_file_content(file_path)
     headers["Content-Type"] = "text/plain"
     content
   end
-end
-
-def users
-  YAML.load(File.read("users/users.yaml"))
 end
 
 def require_signed_in_user
@@ -68,7 +87,7 @@ end
 post '/users/sign_in' do
   @user = params[:user]
   password = params[:password]
-  if users[@user] == password
+  if valid_credentials?(@user, password)
     session[:user] = @user
     session[:message] = 'Welcome!'
     redirect '/'
