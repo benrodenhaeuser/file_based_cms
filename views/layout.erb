@@ -11,15 +11,15 @@
     <header>
       <h1>
         <a href="/">
-          YourCMS
+          SuperCMS
         </a>
       </h1>
     </header>
 
     <% if session[:message] %>
-      <div class="message">
-        <p><%= session.delete(:message) %></p>
-      </div>
+    <div>
+      <p class="message"><%= session.delete(:message) %></p>
+    </div>
     <% end %>
 
     <main>

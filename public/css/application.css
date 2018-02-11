@@ -5,6 +5,11 @@ body {
   padding: 50px;
 }
 
+div {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 header {
   padding-bottom: 50px;
 }
@@ -21,8 +26,13 @@ main > h1 {
 .message {
   background-color: yellow;
   margin-bottom: 10px;
+  display: inline;
 }
 
 form.inline {
   display: inline;
+}
+
+.user-status {
+  font-style: italic;
 }

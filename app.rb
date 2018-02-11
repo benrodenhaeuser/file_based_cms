@@ -3,6 +3,7 @@ require 'sinatra/reloader'
 require "sinatra/content_for"
 require "tilt/erubis"
 require "redcarpet"
+require 'yaml'
 
 configure do
   enable :sessions
@@ -28,10 +29,14 @@ def load_file_content(file_path)
   if File.extname(file_path) == '.md'
     headers["Content-Type"] = "text/html"
     erb render_markdown(content)
-  else # TODO: this allows to create files with any (or no) extension
+  else
     headers["Content-Type"] = "text/plain"
     content
   end
+end
+
+def users
+  YAML.load(File.read("users/users.yaml"))
 end
 
 before do
@@ -40,7 +45,32 @@ before do
 end
 
 get '/' do
+  @user = session[:user]
   erb :index
+end
+
+get '/users/sign_in' do
+  erb :sign_in_form
+end
+
+post '/users/sign_in' do
+  @user = params[:user]
+  password = params[:password]
+  if users[@user] == password
+    session[:user] = @user
+    session[:message] = 'Welcome!'
+    redirect '/'
+  else
+    session[:message] = 'Invalid credentials.'
+    status 422
+    erb :sign_in_form
+  end
+end
+
+post '/users/sign_out' do
+  session[:user] = false
+  session[:message] = "You have been logged out of the system."
+  redirect('/')
 end
 
 get '/:filename' do

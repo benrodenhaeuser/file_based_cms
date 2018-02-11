@@ -97,6 +97,47 @@ class AppTest < Minitest::Test
   def test_with_empty_filename
     post "/document/new", :filename => ''
     assert_equal 422, last_response.status
-    # get last_response.headers['Location']
+  end
+
+  def test_delete_document
+    create_document('about.txt')
+
+    post '/about.txt/delete', :filename => 'about.txt'
+    assert_equal 302, last_response.status
+
+    get last_response.headers['Location']
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "'about.txt' has been deleted"
+
+    get '/'
+    refute_includes last_response.body, 'about.txt'
+  end
+
+  def test_signin
+    post "/users/sign_in", :user => "admin", :password => "secret"
+    assert_equal 302, last_response.status
+
+    get last_response["Location"]
+    assert_includes last_response.body, "Welcome"
+    assert_includes last_response.body, "Logged in as admin"
+  end
+
+  def test_signin_with_bad_credentials
+    post "/users/sign_in", user: "guest", password: "shhhh"
+    assert_equal 422, last_response.status
+    assert_includes last_response.body, "Invalid credentials"
+  end
+
+  def test_signout
+    post "/users/sign_in", user: "admin", password: "secret"
+    assert_equal 302, last_response.status
+    get last_response["Location"]
+    assert_includes last_response.body, "Welcome"
+
+    post "/users/sign_out"
+    get last_response["Location"]
+
+    assert_includes last_response.body, "You have been logged out"
+    assert_includes last_response.body, "Sign In"
   end
 end
