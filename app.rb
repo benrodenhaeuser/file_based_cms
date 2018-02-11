@@ -5,8 +5,6 @@ require "tilt/erubis"
 require "redcarpet"
 require 'yaml'
 
-require_relative 'render/plain'
-
 configure do
   enable :sessions
   set :session_secret, 'secret'
