@@ -27,6 +27,16 @@ class AppTest < Minitest::Test
     end
   end
 
+  def session
+    last_request.env["rack.session"]
+  end
+
+  def test_accessing_session_hash
+    post "/document/new", :filename => 'filename'
+    assert_equal 302, last_response.status
+    assert_includes session[:message], 'has been created'
+  end
+
   def test_index
     create_document('about.txt')
 
@@ -47,9 +57,7 @@ class AppTest < Minitest::Test
   def test_document_not_found
     get "nonsensical.tuxt"
     assert_equal 302, last_response.status
-    get last_response['Location']
-    assert_equal 200, last_response.status
-    assert_includes last_response.body, 'requested file does not exist.'
+    assert_includes session[:message], 'requested file does not exist.'
   end
 
   def test_show_rendered_md_document
@@ -76,8 +84,7 @@ class AppTest < Minitest::Test
 
     post "/about.txt", :content => 'modified'
     assert_equal 302, last_response.status
-    get last_response.headers['Location']
-    assert_includes last_response.body, 'modified'
+    assert_includes session[:message], 'modified'
   end
 
   def test_new_document_view
@@ -89,9 +96,7 @@ class AppTest < Minitest::Test
   def test_submit_new_document
     post "/document/new", :filename => 'filename'
     assert_equal 302, last_response.status
-    get last_response.headers['Location']
-    assert_includes last_response.body, 'filename'
-    assert_includes last_response.body, 'has been created'
+    assert_includes session[:message], 'has been created'
   end
 
   def test_with_empty_filename

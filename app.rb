@@ -5,6 +5,8 @@ require "tilt/erubis"
 require "redcarpet"
 require 'yaml'
 
+require_relative 'render/plain'
+
 configure do
   enable :sessions
   set :session_secret, 'secret'
@@ -20,16 +22,19 @@ def data_path
 end
 
 def render_markdown(content)
-  Redcarpet::Markdown.new(Redcarpet::Render::HTML).render(content)
+  markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+  markdown.render(content)
 end
 
+# TODO: would like to use something like "in_paragraphs(text)" for textfiles
 def load_file_content(file_path)
   content = File.read(file_path)
 
-  if File.extname(file_path) == '.md'
+  case File.extname(file_path)
+  when '.md'
     headers["Content-Type"] = "text/html"
     erb render_markdown(content)
-  else
+  when '.txt'
     headers["Content-Type"] = "text/plain"
     content
   end
@@ -37,6 +42,15 @@ end
 
 def users
   YAML.load(File.read("users/users.yaml"))
+end
+
+def require_signed_in_user
+  redirect_guest_to_index unless session.key?(:user)
+end
+
+def redirect_guest_to_index
+  session[:message] = "You must be signed in for this action."
+  redirect "/"
 end
 
 before do
@@ -68,7 +82,7 @@ post '/users/sign_in' do
 end
 
 post '/users/sign_out' do
-  session[:user] = false
+  session.delete(:user)
   session[:message] = "You have been logged out of the system."
   redirect('/')
 end
@@ -86,6 +100,7 @@ get '/:filename' do
 end
 
 get '/:filename/edit' do
+  require_signed_in_user
   @filename = params[:filename]
   file_path = File.join(data_path, params[:filename])
 
@@ -99,6 +114,7 @@ get '/:filename/edit' do
 end
 
 post '/:filename/delete' do
+  require_signed_in_user
   @filename = params[:filename]
   file_path = File.join(data_path, params[:filename])
   File.delete(file_path)
@@ -107,6 +123,8 @@ post '/:filename/delete' do
 end
 
 post '/:filename' do
+  require_signed_in_user
+
   filename = params[:filename]
   file_path = File.join(data_path, filename)
 
@@ -117,10 +135,13 @@ post '/:filename' do
 end
 
 get '/document/new' do
+  require_signed_in_user
   erb(:new_document)
 end
 
 post '/document/new' do
+  require_signed_in_user
+
   filename = params[:filename]
 
   if filename != ''
