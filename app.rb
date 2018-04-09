@@ -17,7 +17,7 @@ class PasswordDigester
     BCrypt::Password.create(password)
   end
 
-  def self.check?(password, encrypted_password)
+  def self.check?(password, encrypted_password)``
     BCrypt::Password.new(encrypted_password) == password
   end
 end
